@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" media="screen" href="applications.css">
+</head>
+<body>
+  <div class="container">
+    <div class="menu">
+      <div id="organise-by">
+        <form>
+          <h3>Organise by:</h3>
+          <label class="block"><input type="radio" name="mode" value="criticality"> Criticality</label>
+        </form>
+      </div>
+    </div>
+
+    <div>
+      <a href="http://www.d20pfsrd.com/feats/feats-db">Feats DB</a> available for download here.
+      Example with dragging http://bl.ocks.org/mbostock/3750558
+    </div>
+    <div id="feats" class="container content"></div>
+
+    <div class="right">
+      <h3 >Filter Options</h3>
+      <ul class="filter">
+        <li class="filter-option">Placeholder Option
+      </ul>
+    </div>
+  </div>
+
+  <script src="d3.js"></script>
+  <script src="palette.js"></script>
+  <script src="graph.js"></script>
+  <script src="http://localhost:8888/skewer"></script>
+</body>
