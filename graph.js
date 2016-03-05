@@ -1,11 +1,11 @@
 /*jshint esnext: true */
 
 var featsElement = d3.select("#feats");
-var width = applicationsElement.style("width").replace("px", "");
+var width = featsElement.style("width").replace("px", "");
 var height = window.innerHeight -4 -4; // 4px padding top and bottom
 var svg = featsElement.append("svg")
-    .attr("width", width)
-    .attr("height", height);
+      .attr("width", width)
+      .attr("height", height);
 
 var link = svg.selectAll(".link"),
     node = svg.selectAll(".node");
@@ -18,25 +18,71 @@ var csvs = [
 ];
 var promisedCsvs = csvs.map(csv);
 
-var feats = null;
-var graph = {};
+var feats = {
+  nodes: [],
+  links: [],
+  cache: {}
+};
+feats.addLinks = function () {
+}
+feats.addNode = function(value) {
+  var node = this.getNode([value.name]);
+  node.value = value;
+}
+feats.createNode = function(name) {
+  return {};
+}
+feats.getNode = function(name) {
+  if (this.cache[name] === undefined) {
+    this.cache[name] = this.createNode(name);
+  }
+  return this.cache[name];
+}
+feats.loadNodes = function(feats) {
+  this.nodes = [];
+  this.links = [];
+  this.cache = {};
+
+  var feat = null;
+  feats.forEach(function (feat) {
+    this.addNode(feat);
+    this.addLinks(feat);
+  }, this);
+
+  Object.keys(this.cache).forEach(function (name) {
+    var node = this.cache[name];
+    this.nodes.push(node);
+  }, this);
+}
 
 function renderFeats() {
+  console.log("renderFeats");
   force
-      .nodes(graph.nodes)
-//      .links(graph.links)
-      .start();
+    .nodes(feats.nodes)
+    .links(feats.links)
+    .on("tick", tick)
+    .start();
 
-  link = link.data(graph.links)
+  link = link.data(feats.links)
     .enter().append("line")
-      .attr("class", "link");
+    .attr("class", "link");
 
-  node = node.data(graph.nodes)
+  node = node.data(feats.nodes)
     .enter().append("circle")
-      .attr("class", "node")
-      .attr("r", 12);
+    .attr("class", "node")
+    .attr("r", 12);
 
-//  featsElement.style("height", height + "px");
+  //  FeatsElement.style("height", height + "px");
+}
+
+function tick() {
+  link.attr("x1", function(d) { return d.source.x; })
+    .attr("y1", function(d) { return d.source.y; })
+    .attr("x2", function(d) { return d.target.x; })
+    .attr("y2", function(d) { return d.target.y; });
+
+  node.attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; });
 }
 
 function csv(url) {
@@ -58,10 +104,8 @@ function update() {
 
 Promise.all(promisedCsvs)
   .then(function (results) {
-    feats = results[0];
-    
-    graph.nodes = feats.map(function (row) {
-      return { name: feats.name };
-    });
+    feats.loadNodes(results[0]);
+
     update();
   });
+
