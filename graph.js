@@ -21,6 +21,16 @@ var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
 
+svg = svg.append("g")
+  .call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom))
+
+svg.append("rect")
+  .attr("class", "overlay")
+  .attr("width", width)
+  .attr("height", height);
+
+svg = svg.append("g");
+
 var link = svg.selectAll(".link"),
     node = svg.selectAll(".node");
 
@@ -172,6 +182,10 @@ function csv(url) {
 
 function update() {
   renderFeats();
+}
+
+function zoom() {
+  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 }
 
 Promise.all(promisedCsvs)
