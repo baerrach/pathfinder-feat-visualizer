@@ -66,9 +66,9 @@ h3 {
 }
 
 .node {
-  cursor: move;
+  cursor: Move;
   fill: #ccc;
-  stroke: #000;
+  stroke: #fff;
   stroke-width: 1.5px;
 }
 
