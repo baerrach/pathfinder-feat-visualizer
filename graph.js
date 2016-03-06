@@ -22,7 +22,7 @@ var svg = featsElement.append("svg")
       .attr("height", height);
 
 svg = svg.append("g")
-  .call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom))
+  .call(d3.behavior.zoom().scaleExtent([0.25, 4]).on("zoom", zoom))
 
 svg.append("rect")
   .attr("class", "overlay")
