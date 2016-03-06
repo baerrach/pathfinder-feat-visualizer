@@ -21,6 +21,20 @@ var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
 
+// build the arrow (http://bl.ocks.org/d3noob/5141278)
+svg.append("svg:defs").selectAll("marker")
+    .data(["end"])      // Different link/path types can be defined here
+  .enter().append("svg:marker")    // This section adds in the arrows
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 15)
+    .attr("refY", -1.5)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+  .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5");
+
 svg = svg.append("g")
   .call(d3.behavior.zoom().scaleExtent([0.25, 4]).on("zoom", zoom))
 
@@ -35,7 +49,9 @@ var link = svg.selectAll(".link"),
     node = svg.selectAll(".node");
 
 var force = d3.layout.force()
-      .size([width, height]);
+      .size([width, height])
+      .linkDistance(60)
+      .charge(-300);
 
 /* Initialize tooltip */
 tip = d3.tip().attr('class', 'd3-tip').html(function(d) { 
@@ -163,7 +179,8 @@ function renderFeats() {
 
   link = link.data(feats.links)
     .enter().append("line")
-    .attr("class", "link");
+    .attr("class", "link")
+    .attr("marker-end", "url(#end)");;
 
 
   //  FeatsElement.style("height", height + "px");
