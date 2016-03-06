@@ -37,6 +37,16 @@ var link = svg.selectAll(".link"),
 var force = d3.layout.force()
       .size([width, height]);
 
+/* Initialize tooltip */
+tip = d3.tip().attr('class', 'd3-tip').html(function(d) { 
+  var tipText = "No name";
+  if (d.value) {
+    tipText = d.value.name;
+  }
+  return tipText;
+});
+svg.call(tip);
+
 var csvs = [
   "feats.csv",
 ];
@@ -59,7 +69,7 @@ feats.addNode = function(value) {
   node.value = value;
 }
 feats.createNode = function(name) {
-  return {};
+  return { value: { name: name} };
 }
 feats.getPrerequisitesAsLinks = function(feat) {
   var prerequisitesAsLinks = [];
@@ -147,7 +157,9 @@ function renderFeats() {
   node = node.data(feats.nodes)
     .enter().append("circle")
     .attr("class", "node")
-    .attr("r", 12);
+    .attr("r", 12)
+    .on('mouseover.tip', tip.show)
+    .on('mouseout.tip', tip.hide);
 
   link = link.data(feats.links)
     .enter().append("line")
