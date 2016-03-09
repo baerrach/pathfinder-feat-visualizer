@@ -48,7 +48,9 @@ svg.append("rect")
 svg = svg.append("g");
 
 var link = svg.selectAll(".link"),
-    node = svg.selectAll(".node");
+    node = svg.selectAll(".node"),
+    selected = null,
+    ui = {};
 
 var force = d3.layout.force()
       .size([width, height])
@@ -65,6 +67,8 @@ tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
   return tipText;
 });
 svg.call(tip);
+
+setupUi();
 
 var csvs = [
   "Feats - Updated 01Mar2016.csv",
@@ -226,7 +230,8 @@ function renderFeats() {
   link = link.data(feats.links)
     .enter().append("line")
     .attr("class", "link")
-    .attr("marker-end", "url(#end)");;
+    .attr("marker-end", "url(#end)")
+    .on('click.toSelect', setSelection);
 
   node = node.data(feats.nodes)
     .enter().append("g")
@@ -235,6 +240,7 @@ function renderFeats() {
   node.append("circle")
     .attr("class", "node")
     .attr("r", radius)
+    .on('click.toSelect', setSelection)
     .on('mouseover.tip', tip.show)
     .on('mouseout.tip', tip.hide);
 
@@ -245,7 +251,38 @@ function renderFeats() {
       return d.value.name;
     });
 
+}
+
+function start() {
+  ui.start.attr("disabled", true);
+  ui.stop.attr("disabled", null);
   force.start();
+}
+
+function stop() {
+  ui.start.attr("disabled", null);
+  ui.stop.attr("disabled", true);
+  force.stop();
+}
+
+function setupUi() {
+  var layout = d3.selectAll(".layout"),
+      button;
+  button = layout.select("[name=start]");
+  button.on('click', start);
+  ui.start = button;
+
+  button = layout.select("[name=stop]");
+  button.on('click', stop);
+  ui.stop = button;
+}
+
+function setSelection(d) {
+  if (selected) {
+    selected.classed("selected", false);
+  }
+  selected = d3.select(this);
+  selected.classed("selected", true);
 }
 
 function tick() {
@@ -277,6 +314,7 @@ function csv(url) {
 
 function update() {
   renderFeats();
+  start();
 }
 
 function zoom() {
@@ -315,4 +353,3 @@ function printXYAllNodes() {
     console.log( id + "," + node.value.name + ", " + node.x + "," + node.y );
   });
 }
-
