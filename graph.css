@@ -24,6 +24,9 @@ h3 {
   line-height: 1.5em;
 }
 
+svg {
+  text-rendering: optimizeLegibility;
+}
 .block {
   display: block;
 }
@@ -81,11 +84,14 @@ h3 {
 }
 
 text {
-  stroke: none;
-  fill: black;
-  font: 10px sans-serif;
+  font-family: 'Roboto', sans-serif;
+  fill: #333;
+  text-shadow: white 0.1em 0.1em 0.2em;
+  font-size: 100%;
   pointer-events: none;
+  stroke: none;
 }
+
 .overlay {
   fill: none;
   pointer-events: all;

@@ -47,7 +47,7 @@ svg.append("rect")
 
 svg = svg.append("g");
 
-var link = svg.selectAll(".link"),
+var link = svg.append("g").selectAll(".link"),
     node = svg.selectAll(".node"),
     selected = null,
     ui = {};
@@ -56,7 +56,10 @@ var force = d3.layout.force()
       .size([width, height])
       .theta(0.95)
       .linkDistance(30)
-      .charge(-350);
+      .charge(-350)
+      .on("tick", tick)
+      .on("start", onStart)
+      .on("end", onStop);
 
 /* Initialize tooltip */
 tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
@@ -111,6 +114,12 @@ feats.getPrerequisitesAsLinks = function(feat) {
   // same for BAB
   // same for caster level?
   // same for class level X
+
+// Or Ability to acquire a special mount
+// Or ability to cast illusion (figment) spells
+// Or spell-like ability with the curse descriptor
+// X speed
+
 
   if (prerequisitesAsString.endsWith(".")) {
     prerequisitesAsString = prerequisitesAsString.slice(0, -1);
@@ -216,8 +225,8 @@ feats.loadNodes = function(feats) {
 
   var n = Math.floor(Math.sqrt(this.nodes.length));
   this.nodes.forEach(function(d, i) {
-    d.x = width/2 + 10*(i % n);
-    d.y = height/2 + 10*(Math.floor(i / n));
+    d.x = 20 + (radius*2+8)*(i % n);
+    d.y = 20 + (radius*2+8)*(Math.floor(i / n));
   });
 }
 
@@ -225,7 +234,6 @@ function renderFeats() {
   force
     .nodes(feats.nodes)
     .links(feats.links)
-    .on("tick", tick)
 
   link = link.data(feats.links)
     .enter().append("line")
@@ -253,15 +261,21 @@ function renderFeats() {
 
 }
 
-function start() {
+function onStart() {
   ui.start.attr("disabled", true);
   ui.stop.attr("disabled", null);
+}
+
+function start() {
   force.start();
 }
 
-function stop() {
+function onStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
+}
+
+function stop() {
   force.stop();
 }
 
@@ -340,7 +354,7 @@ function printXYFeats() {
 function printXYPrequisites() {
   console.log( "name, x, y" );
   feats.nodes.forEach(function (node) {
-    if (!node.value.id) {
+    if (!node.value.id || node.value.id >= 9000) {
       console.log( node.value.name + "," + node.x + "," + node.y );
     }
   });
