@@ -38,7 +38,7 @@ svg.append("svg:defs").selectAll("marker")
   .attr("d", "M0,-5L10,0L0,5");
 
 svg = svg.append("g")
-  .call(d3.behavior.zoom().scaleExtent([0.125, 8]).on("zoom", zoom))
+  .call(d3.behavior.zoom().scaleExtent([0.03125, 32]).on("zoom", zoom))
 
 svg.append("rect")
   .attr("class", "overlay")
@@ -49,6 +49,7 @@ svg = svg.append("g");
 
 var link = svg.append("g").selectAll(".link"),
     node = svg.selectAll(".node"),
+    layoutStatus = d3.select("#layout-status");
     selected = null,
     ui = {};
 
@@ -75,6 +76,7 @@ setupUi();
 
 var csvs = [
   "Feats - Updated 01Mar2016.csv",
+  "prerequisites.csv"
 ];
 var promisedCsvs = csvs.map(csv);
 
@@ -93,9 +95,16 @@ feats.addLinks = function (feat) {
 feats.addNode = function(value) {
   var node = this.getNode(value.name);
   node.value = value;
-  node.x = Number(value.x || 0);
-  node.y = Number(value.y || 0);
+  node.x = value.x ? Number(value.x) : undefined;
+  node.y = value.y ? Number(value.y) : undefined;
   node.fixed = false;
+  if (isNaN(node.x)) {
+    console.log(value.id + ":" + value.name + " x = NaN");
+  }
+  if (isNaN(node.y)) {
+    console.log(value.id + ":" + value.name + " y = NaN");
+  }
+
 }
 feats.getPrerequisitesAsLinks = function(feat) {
   var prerequisitesAsLinks = [];
@@ -173,14 +182,11 @@ feats.getPrerequisitesAsLinks = function(feat) {
     }, this);
   }
 
-
   return prerequisitesAsLinks;
 }
 feats.getNode = function(name) {
   function createNode(name) {
     return {
-      x: 0,
-      y: 0,
       value: { name: name }
     };
   }
@@ -194,30 +200,35 @@ feats.getNode = function(name) {
   return this.cache[name];
 }
 feats.loadNodes = function(feats) {
-  this.nodes = [];
-  this.links = [];
-  this.cache = {};
-
   // Add the nodes
   feats.forEach(function (feat) {
     if ("Mythic" === feat.type) {
       feat.name = feat.name + " (Mythic)";
     }
     if (this.cache[feat.name]) {
-      feat.name = feat.name + " (Duplicate)"
-      feat.prerequisites = "Duplicate";
+      var duplicate = this.cache[feat.name];
+      if (duplicate.type !== feat.type
+          || duplicate.source !== feat.type) {
+        console.log("Duplicate found: name=" + feat.name 
+                    + " type=" + feat.type
+                    + " souce=" + feat.souce);
+      }
+      return;
     }
     this.addNode(feat);
   }, this);
+}
 
+feats.loadLinks = function(feats) {
   // Do the links last to avoid creating duplicates nodes
   // when the prequisites creates placeholders instead of real nodes.
   // This way the only place holders are for non-feat prerequisites.
   feats.forEach(function (feat) {
     this.addLinks(feat);
   }, this);
+}
 
-
+feats.buildNodeList = function() {
   Object.keys(this.cache).forEach(function (name) {
     var node = this.cache[name];
     this.nodes.push(node);
@@ -225,8 +236,12 @@ feats.loadNodes = function(feats) {
 
   var n = Math.floor(Math.sqrt(this.nodes.length));
   this.nodes.forEach(function(d, i) {
-    d.x = 20 + (radius*2+8)*(i % n);
-    d.y = 20 + (radius*2+8)*(Math.floor(i / n));
+    if (!d.x) {
+      d.x = 20 + (radius*2+8)*(i % n);
+    }
+    if (!d.y) {
+      d.y = 20 + (radius*2+8)*(Math.floor(i / n));
+    }
   });
 }
 
@@ -273,6 +288,7 @@ function start() {
 function onStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
+  layoutStatus.text("");
 }
 
 function stop() {
@@ -299,7 +315,8 @@ function setSelection(d) {
   selected.classed("selected", true);
 }
 
-function tick() {
+function tick(event) {
+  layoutStatus.text("Alpha: " + event.alpha);
 
   link.attr("x1", function(d) {
     return d.source.x;
@@ -328,7 +345,7 @@ function csv(url) {
 
 function update() {
   renderFeats();
-  start();
+//  tick(); // to set x,y transforms for nodes and links
 }
 
 function zoom() {
@@ -338,14 +355,19 @@ function zoom() {
 Promise.all(promisedCsvs)
   .then(function (results) {
     feats.loadNodes(results[0]);
+    feats.loadNodes(results[1]);
 
+    feats.loadLinks(results[0]);
+    feats.loadLinks(results[1]);
+
+    feats.buildNodeList();
     update();
   });
 
 function printXYFeats() {
   console.log( "id, name, x, y" );
   feats.nodes.forEach(function (node) {
-    if (node.value.id) {
+    if (node.value.id && node.value.id < 9000) {
       console.log( node.value.id + "," + node.value.name + ", " + node.x + "," + node.y );
     }
   });
