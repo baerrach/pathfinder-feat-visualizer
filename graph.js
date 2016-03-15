@@ -49,16 +49,19 @@ svg = svg.append("g");
 
 var link = svg.append("g").selectAll(".link"),
     node = svg.selectAll(".node"),
-    layoutStatus = d3.select("#layout-status");
+    layoutStatus = d3.select("#layout-status"),
+    enableRedraw,
     selected = null,
-    ui = {};
+    ui = {},
+    startTime,
+    endTime;
 
 var force = d3.layout.force()
       .size([width, height])
       .theta(0.95)
       .linkDistance(30)
       .charge(-350)
-      .on("tick", tick)
+      .on("tick", onTick)
       .on("start", onStart)
       .on("end", onStop);
 
@@ -279,6 +282,8 @@ function renderFeats() {
 function onStart() {
   ui.start.attr("disabled", true);
   ui.stop.attr("disabled", null);
+
+  startTime = performance.now();
 }
 
 function start() {
@@ -289,6 +294,13 @@ function onStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
   layoutStatus.text("");
+
+  endTime = performance.now();
+  var diff = moment.duration(endTime - startTime);
+  console.log(diff.humanize());
+
+  positionLinks();
+  positionNodes();
 }
 
 function stop() {
@@ -305,6 +317,10 @@ function setupUi() {
   button = layout.select("[name=stop]");
   button.on('click', stop);
   ui.stop = button;
+
+  d3.select("#enable-redraw").on("change", function() {
+    enableRedraw = this.checked;
+  });
 }
 
 function setSelection(d) {
@@ -315,19 +331,27 @@ function setSelection(d) {
   selected.classed("selected", true);
 }
 
-function tick(event) {
-  layoutStatus.text("Alpha: " + event.alpha);
-
-  link.attr("x1", function(d) {
-    return d.source.x;
-  })
-    .attr("y1", function(d) { return d.source.y; })
-    .attr("x2", function(d) { return d.target.x; })
-    .attr("y2", function(d) { return d.target.y; });
-
+function positionNodes() {
   node
     .attr("transform", function(d) {
       return "translate(" + d.x + "," + d.y + ")"; });
+}
+
+function positionLinks() {
+  link
+    .attr("x1", function(d) { return d.source.x; })
+    .attr("y1", function(d) { return d.source.y; })
+    .attr("x2", function(d) { return d.target.x; })
+    .attr("y2", function(d) { return d.target.y; });
+}
+
+function onTick(event) {
+  layoutStatus.text("Alpha: " + event.alpha.toFixed(3));
+
+  if (enableRedraw) {
+    positionLinks();
+    positionNodes();
+  }
 }
 
 function csv(url) {

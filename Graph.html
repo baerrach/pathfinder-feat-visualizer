@@ -24,10 +24,15 @@
     <div class="right">
       <div class="layout">
         <fieldset>
-          <legend>Layout</legend>
-          <button name="start">Start</button>
-          <button name="stop" disabled>Stop</button>
-          <span id="layout-status"></span>
+          <p>
+            <legend>Layout</legend>
+            <button name="start">Start</button>
+            <button name="stop" disabled>Stop</button>
+            <span id="layout-status"></span>
+          </p>
+          <p>
+            <label><input id="enable-redraw" type="checkbox">Enable redraw</label>
+          </p>
         </fieldset>
       </div>
       <div>
@@ -45,5 +50,6 @@
   <script src="d3.tip.js"></script>
   <script src="palette.js"></script>
   <script src="graph.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
   <script src="http://localhost:8888/skewer"></script>
 </body>
