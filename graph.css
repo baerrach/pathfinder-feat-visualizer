@@ -104,6 +104,40 @@ text {
   border-radius: 2px;
 }
 
+.pan {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+#pan-top-left {
+  transform: rotate(-45deg);
+}
+
+#pan-top-right {
+  transform: rotate(45deg);
+}
+
+#pan-center-left {
+  transform: rotate(-90deg);
+}
+
+#pan-center-right {
+  transform: rotate(90deg);
+}
+
+#pan-bottom-left {
+  transform: rotate(-135deg);
+}
+
+#pan-bottom-center {
+  transform: rotate(180deg);
+}
+
+#pan-bottom-right {
+  transform: rotate(135deg);
+}
+
 .dimmed {
   opacity: 0.3;
 }

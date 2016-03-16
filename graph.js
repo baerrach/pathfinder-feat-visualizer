@@ -14,6 +14,7 @@ if (!String.prototype.endsWith) {
   };
 }
 
+var panRatio = 0.20;
 var radius = 12;
 var featsElement = d3.select("#feats");
 var width = featsElement.style("width").replace("px", "");
@@ -37,8 +38,11 @@ svg.append("svg:defs").selectAll("marker")
   .append("svg:path")
   .attr("d", "M0,-5L10,0L0,5");
 
+var zoom = d3.behavior.zoom()
+      .scaleExtent([0.03125, 32]).on("zoom", zoom);
+
 svg = svg.append("g")
-  .call(d3.behavior.zoom().scaleExtent([0.03125, 32]).on("zoom", zoom))
+  .call(zoom)
 
 svg.append("rect")
   .attr("class", "overlay")
@@ -47,8 +51,8 @@ svg.append("rect")
 
 svg = svg.append("g");
 
-var link = svg.append("g").selectAll(".link"),
-    node = svg.selectAll(".node"),
+var link = svg.append("g").attr("name", "links").selectAll(".link"),
+    node = svg.append("g").attr("name", "nodes").selectAll(".node"),
     layoutStatus = d3.select("#layout-status"),
     enableRedraw,
     selected = null,
@@ -321,6 +325,16 @@ function setupUi() {
   d3.select("#enable-redraw").on("change", function() {
     enableRedraw = this.checked;
   });
+
+  d3.select("#pan-top-left").on("click", panTopLeft);
+  d3.select("#pan-top-center").on("click", panTopCenter);
+  d3.select("#pan-top-right").on("click", panTopRight);
+  d3.select("#pan-center-left").on("click", panCenterLeft);
+  d3.select("#pan-center-center").on("click", panHome);
+  d3.select("#pan-center-right").on("click", panCenterRight);
+  d3.select("#pan-bottom-left").on("click", panBottomLeft);
+  d3.select("#pan-bottom-center").on("click", panBottomCenter);
+  d3.select("#pan-bottom-right").on("click", panBottomRight);
 }
 
 function setSelection(d) {
@@ -373,8 +387,56 @@ function update() {
   positionLinks();
 }
 
+function pan(_) {
+  var translate = zoom.translate();
+  translate[0] += width*_[0];
+  translate[1] += height*_[1];
+  zoom.translate(translate);
+  zoom.event(svg);
+}
+
+function panTopLeft() {
+  pan([panRatio, panRatio]);
+}
+
+function panTopCenter() {
+  pan([0, panRatio]);
+}
+
+function panTopRight() {
+  pan([-panRatio, panRatio]);
+}
+
+function panCenterLeft() {
+  pan([panRatio, 0]);
+}
+
+function panHome() {
+  zoom.translate([0, 0]);
+  zoom.event(svg);
+}
+
+function panCenterRight() {
+  pan([panRatio, 0]);
+}
+
+function panBottomLeft() {
+  pan([panRatio, -panRatio]);
+}
+
+function panBottomCenter() {
+  pan([0, -panRatio]);
+}
+
+function panBottomRight() {
+  pan([-panRatio, -panRatio]);
+}
+
 function zoom() {
-  svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  svg
+    .transition()
+    .duration(10000)
+    .attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 }
 
 Promise.all(promisedCsvs)
