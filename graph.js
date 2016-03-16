@@ -369,7 +369,8 @@ function csv(url) {
 
 function update() {
   renderFeats();
-//  tick(); // to set x,y transforms for nodes and links
+  positionNodes();
+  positionLinks();
 }
 
 function zoom() {
