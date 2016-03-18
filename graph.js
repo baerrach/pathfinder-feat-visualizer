@@ -15,10 +15,27 @@ if (!String.prototype.endsWith) {
 }
 
 var panRatio = 0.20;
-var radius = 12;
+var maxRadius = 12;
+var maxStrokeWidth = 1.5;
+var labelOffset = [4, 0];
+var scaleExtent = [0.03125, 32];
 var featsElement = d3.select("#feats");
 var width = featsElement.style("width").replace("px", "");
 var height = window.innerHeight -4 -4; // 4px padding top and bottom
+var x = d3.scale.linear()
+    .domain([0, width])
+    .range([0, width]);
+var y = d3.scale.linear()
+    .domain([0, height])
+    .range([height, 0]);
+var r = d3.scale.linear()
+      .domain([scaleExtent[0],1,scaleExtent[1]])
+      .range([0.25, maxRadius, maxRadius]) // shrink but dont get bigger than defined radius
+      .clamp(maxRadius);
+var strokeWidth = d3.scale.linear()
+      .domain([scaleExtent[0],1,scaleExtent[1]])
+      .range([0.25, maxStrokeWidth, maxStrokeWidth]) // shrink but dont get bigger than defined thickness
+      .clamp(maxStrokeWidth);
 var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
@@ -28,6 +45,7 @@ svg.append("svg:defs").selectAll("marker")
   .data(["end"])      // Different link/path types can be defined here
   .enter().append("svg:marker")    // This section adds in the arrows
   .attr("id", String)
+  .attr("markerUnits", "userSpaceOnUse")
   .attr("class", "arrow")
   .attr("viewBox", "0 -5 10 10")
   .attr("refX", 25)
@@ -39,20 +57,21 @@ svg.append("svg:defs").selectAll("marker")
   .attr("d", "M0,-5L10,0L0,5");
 
 var zoom = d3.behavior.zoom()
-      .scaleExtent([0.03125, 32]).on("zoom", zoom);
-
-svg = svg.append("g")
-  .call(zoom)
+      .size([width, height])
+      .x(x)
+      .y(y)
+      .scaleExtent(scaleExtent)
+      .on("zoom", onZoom);
 
 svg.append("rect")
   .attr("class", "overlay")
   .attr("width", width)
-  .attr("height", height);
+  .attr("height", height)
+  .call(zoom);
 
-svg = svg.append("g");
-
-var link = svg.append("g").attr("name", "links").selectAll(".link"),
-    node = svg.append("g").attr("name", "nodes").selectAll(".node"),
+var link = svg.append("g").attr("name", "links"),
+    node = svg.append("g").attr("name", "nodes"),
+    label = svg.append("g").attr("name", "labels"),
     layoutStatus = d3.select("#layout-status"),
     enableRedraw,
     selected = null,
@@ -244,10 +263,10 @@ feats.buildNodeList = function() {
   var n = Math.floor(Math.sqrt(this.nodes.length));
   this.nodes.forEach(function(d, i) {
     if (!d.x) {
-      d.x = 20 + (radius*2+8)*(i % n);
+      d.x = 20 + (r(1)*2+8)*(i % n);
     }
     if (!d.y) {
-      d.y = 20 + (radius*2+8)*(Math.floor(i / n));
+      d.y = 20 + (r(1)*2+8)*(Math.floor(i / n));
     }
   });
 }
@@ -257,26 +276,28 @@ function renderFeats() {
     .nodes(feats.nodes)
     .links(feats.links)
 
-  link = link.data(feats.links)
-    .enter().append("line")
-    .attr("class", "link")
+  link = link.selectAll(".link").data(feats.links);
+  link.enter().append("line");
+  link.exit().remove();
+  link.attr("class", "link")
+    .attr("name", function (d) { return d.source.value.name + " requires " + d.target.value.name; })
     .attr("marker-end", "url(#end)")
     .on('click.toSelect', setSelection);
 
-  node = node.data(feats.nodes)
-    .enter().append("g")
-    .attr("class", "node");
-
-  node.append("circle")
-    .attr("class", "node")
-    .attr("r", radius)
+  node = node.selectAll(".node").data(feats.nodes);
+  node.enter().append("circle");
+  node.exit().remove();
+  node.attr("class", "node")
+    .attr("name", function (d) { return d.value.name; })
     .on('click.toSelect', setSelection)
     .on('mouseover.tip', tip.show)
     .on('mouseout.tip', tip.hide);
 
-  node.append("text")
-    .attr("x", radius + 4)
-    .attr("dy", ".35em")
+  label = label.selectAll(".label").data(feats.nodes);
+  label.enter().append("text");
+  label.exit().remove();
+  label.attr("class", "label")
+    .attr("name", function (d) { return d.value.name; })
     .text(function(d) {
       return d.value.name;
     });
@@ -303,8 +324,7 @@ function onStop() {
   var diff = moment.duration(endTime - startTime);
   console.log(diff.humanize());
 
-  positionLinks();
-  positionNodes();
+  reposition();
 }
 
 function stop() {
@@ -345,26 +365,49 @@ function setSelection(d) {
   selected.classed("selected", true);
 }
 
+function reposition() {
+  var s = performance.now();
+  positionLinks();
+  positionNodes();
+  positionLabels();
+
+  var e = performance.now();
+  var diff = moment.duration(e - s);
+  console.log("reposition time=" + diff.toString());
+
+}
+
 function positionNodes() {
   node
-    .attr("transform", function(d) {
-      return "translate(" + d.x + "," + d.y + ")"; });
+    .attr("cx", function (d) { return x(d.x); })
+    .attr("cy", function (d) { return y(d.y); })
+    .attr("r", r(zoom.scale()));
 }
 
 function positionLinks() {
   link
-    .attr("x1", function(d) { return d.source.x; })
-    .attr("y1", function(d) { return d.source.y; })
-    .attr("x2", function(d) { return d.target.x; })
-    .attr("y2", function(d) { return d.target.y; });
+    .style("stroke-width", function (d) {
+      return strokeWidth(zoom.scale()) + "px";
+    })
+    .attr("x1", function(d) { return x(d.source.x); })
+    .attr("y1", function(d) { return y(d.source.y); })
+    .attr("x2", function(d) { return x(d.target.x); })
+    .attr("y2", function(d) { return y(d.target.y); });
+}
+
+function positionLabels() {
+  var shouldHideLabels = zoom.scale() < 1;
+  label
+    .classed("hidden", shouldHideLabels)
+    .attr("x", function (d) { return x(d.x + r(1) + labelOffset[0]); })
+    .attr("y", function (d) { return y(d.y + labelOffset[1]); });
 }
 
 function onTick(event) {
   layoutStatus.text("Alpha: " + event.alpha.toFixed(3));
 
   if (enableRedraw) {
-    positionLinks();
-    positionNodes();
+    reposition();
   }
 }
 
@@ -383,8 +426,7 @@ function csv(url) {
 
 function update() {
   renderFeats();
-  positionNodes();
-  positionLinks();
+  reposition();
 }
 
 function pan(_) {
@@ -417,7 +459,7 @@ function panHome() {
 }
 
 function panCenterRight() {
-  pan([panRatio, 0]);
+  pan([-panRatio, 0]);
 }
 
 function panBottomLeft() {
@@ -432,11 +474,8 @@ function panBottomRight() {
   pan([-panRatio, -panRatio]);
 }
 
-function zoom() {
-  svg
-    .transition()
-    .duration(10000)
-    .attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+function onZoom() {
+  reposition();
 }
 
 Promise.all(promisedCsvs)
