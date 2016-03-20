@@ -1,71 +1,113 @@
 <!DOCTYPE html>
-<head>
+<head lang="en">
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.css">
   <link rel="stylesheet" type="text/css" media="screen" href="graph.css">
 </head>
 <body>
-  <div class="container">
-    <div class="menu">
-      <div id="organise-by">
-        <form>
-          <h3>Organise by:</h3>
-          <label class="block"><input type="radio" name="mode" value="criticality"> Criticality</label>
-        </form>
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="col-md-1">
+        <div id="organise-by">
+          <form>
+            <h3>Organise by:</h3>
+            <label class="block"><input type="radio" name="mode" value="criticality"> Criticality</label>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-md-9">
+        <a href="http://www.pathfindercommunity.net/home/databases/feats">Feats DB 2016-03-01</a> available for download here.
+        Example with dragging http://bl.ocks.org/mbostock/3750558
+        <div id="feats" class=""></div>
+      </div>
+
+      <div class="col-md-2">
+        <div class="layout">
+          <fieldset>
+            <legend>Layout</legend>
+            <div class="row">
+            </div>
+            <div class="row">
+              <div class="col-md-3">
+                <button name="start">Start</button>
+              </div>
+              <div class="col-md-3">
+                <button name="stop" disabled>Stop</button>
+              </div>
+              <div id="layout-status-container" class="col-md-5 progress">
+                <div id="layout-status" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                  2%
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <label><input id="enable-redraw" type="checkbox">Enable redraw</label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+        <div>
+          <fieldset>
+            <legend>Filter Options</legend>
+            <ul class="filter">
+              <li class="filter-option">Placeholder Option
+            </ul>
+          </fieldset>
+        </div>
+        <div>
+          <fieldset>
+            <legend>Pan and Zoom</legend>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="row">
+                  <div class="col-md-4">
+                    <button><img id="pan-top-left" src="ic_navigation_black_24px.svg" alt="pan top left"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-top-center" src="ic_navigation_black_24px.svg" alt="pan top center"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-top-right" src="ic_navigation_black_24px.svg" alt="pan top right"></button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <button><img id="pan-center-left" src="ic_navigation_black_24px.svg" alt="pan center left"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-center-center" src="ic_home_black_24px.svg" alt="pan home"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-center-right" src="ic_navigation_black_24px.svg" alt="pan centre right"></button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-left" src="ic_navigation_black_24px.svg" alt="pan bottom left"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-center" src="ic_navigation_black_24px.svg" alt="pan bottom center"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-right" src="ic_navigation_black_24px.svg" alt="pan bottom right"></button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">zoom</div>
+            </div>
+          </fieldset>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div class="content">
-      <a href="http://www.pathfindercommunity.net/home/databases/feats">Feats DB 2016-03-01</a> available for download here.
-      Example with dragging http://bl.ocks.org/mbostock/3750558
-    </div>
-    <div id="feats" class="container content"></div>
-
-    <div class="right">
-      <div class="layout">
-        <fieldset>
-          <legend>Layout</legend>
-          <p>
-            <button name="start">Start</button>
-            <button name="stop" disabled>Stop</button>
-            <span id="layout-status"></span>
-          </p>
-          <p>
-            <label><input id="enable-redraw" type="checkbox">Enable redraw</label>
-          </p>
-        </fieldset>
-      </div>
-      <div>
-        <fieldset>
-          <legend>Filter Options</legend>
-          <ul class="filter">
-            <li class="filter-option">Placeholder Option
-          </ul>
-        </fieldset>
-      </div>
-      <div>
-        <fieldset>
-          <legend>Pan and Zoom</legend>
-          <div>
-            <div class="pan">
-              <button><img id="pan-top-left" src="ic_navigation_black_24px.svg" alt="pan top left"></button><button><img id="pan-top-center" src="ic_navigation_black_24px.svg" alt="pan top center"></button><button><img id="pan-top-right" src="ic_navigation_black_24px.svg" alt="pan top right"></button>
-            </div>
-            <div class="pan">
-              <button><img id="pan-center-left" src="ic_navigation_black_24px.svg" alt="pan center left"></button><button><img id="pan-center-center" src="ic_home_black_24px.svg" alt="pan home"></button><button><img id="pan-center-right" src="ic_navigation_black_24px.svg" alt="pan centre right"></button>
-            </div>
-            <div class="pan">
-              <button><img id="pan-bottom-left" src="ic_navigation_black_24px.svg" alt="pan bottom left"></button><button><img id="pan-bottom-center" src="ic_navigation_black_24px.svg" alt="pan bottom center"></button><button><img id="pan-bottom-right" src="ic_navigation_black_24px.svg" alt="pan bottom right"></button>
-            </div>
-          </div><div>zoom</div>
-        </fieldset>
-      </div>
-    </div>
-  </div>
-
-  <script src="d3.js"></script>
-  <script src="d3.tip.js"></script>
-  <script src="palette.js"></script>
-  <script src="graph.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
-  <script src="http://localhost:8888/skewer"></script>
+    <script src="d3.js"></script>
+    <script src="d3.tip.js"></script>
+    <script src="palette.js"></script>
+    <script src="graph.js"></script>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
+    <script src="http://localhost:8888/skewer"></script>
 </body>

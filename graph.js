@@ -72,7 +72,6 @@ svg.append("rect")
 var link = svg.append("g").attr("name", "links"),
     node = svg.append("g").attr("name", "nodes"),
     label = svg.append("g").attr("name", "labels"),
-    layoutStatus = d3.select("#layout-status"),
     enableRedraw,
     selected = null,
     ui = {},
@@ -318,7 +317,7 @@ function start() {
 function onStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
-  layoutStatus.text("");
+  ui.layoutStatusContainer.classed("invisible", true);
 
   endTime = performance.now();
   var diff = moment.duration(endTime - startTime);
@@ -332,15 +331,19 @@ function stop() {
 }
 
 function setupUi() {
-  var layout = d3.selectAll(".layout"),
-      button;
-  button = layout.select("[name=start]");
-  button.on('click', start);
-  ui.start = button;
+  var layout = d3.selectAll(".layout");
 
-  button = layout.select("[name=stop]");
-  button.on('click', stop);
-  ui.stop = button;
+  ui.start = layout.select("[name=start]");
+  ui.start.on('click', start);
+
+  ui.stop = layout.select("[name=stop]");
+  ui.stop.on('click', stop);
+
+  ui.layoutStatusContainer = layout.select("#layout-status-container");
+  ui.layoutStatusContainer.classed("invisible", true);
+
+  ui.layoutStatus = layout.select("#layout-status");
+  ui.layoutStatus.text("");
 
   d3.select("#enable-redraw").on("change", function() {
     enableRedraw = this.checked;
@@ -404,7 +407,11 @@ function positionLabels() {
 }
 
 function onTick(event) {
-  layoutStatus.text("Alpha: " + event.alpha.toFixed(3));
+  var percentComplete = (104 - Math.floor(event.alpha*1000)) + "%";
+
+  ui.layoutStatus.text(percentComplete);
+  ui.layoutStatus.style("width", percentComplete);
+  ui.layoutStatusContainer.classed("invisible", false);
 
   if (enableRedraw) {
     reposition();
