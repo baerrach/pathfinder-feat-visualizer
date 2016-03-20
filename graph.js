@@ -23,11 +23,11 @@ var featsElement = d3.select("#feats");
 var width = featsElement.style("width").replace("px", "");
 var height = window.innerHeight -4 -4; // 4px padding top and bottom
 var x = d3.scale.linear()
-    .domain([0, width])
-    .range([0, width]);
+      .domain([0, width])
+      .range([0, width]);
 var y = d3.scale.linear()
-    .domain([0, height])
-    .range([height, 0]);
+      .domain([0, height])
+      .range([height, 0]);
 var r = d3.scale.linear()
       .domain([scaleExtent[0],1,scaleExtent[1]])
       .range([0.25, maxRadius, maxRadius]) // shrink but dont get bigger than defined radius
@@ -69,10 +69,11 @@ svg.append("rect")
   .attr("height", height)
   .call(zoom);
 
-var link = svg.append("g").attr("name", "links"),
-    node = svg.append("g").attr("name", "nodes"),
-    label = svg.append("g").attr("name", "labels"),
-    enableRedraw,
+svg.append("g").attr("name", "links");
+svg.append("g").attr("name", "nodes");
+svg.append("g").attr("name", "labels");
+
+var enableRedraw,
     selected = null,
     ui = {},
     startTime,
@@ -84,8 +85,8 @@ var force = d3.layout.force()
       .linkDistance(30)
       .charge(-350)
       .on("tick", onTick)
-      .on("start", onStart)
-      .on("end", onStop);
+      .on("start", onForceStart)
+      .on("end", onForceStop);
 
 /* Initialize tooltip */
 tip = d3.tip().attr('class', 'd3-tip').html(function(d) {
@@ -108,7 +109,9 @@ var promisedCsvs = csvs.map(csv);
 var feats = {
   nodes: [],
   links: [],
-  cache: {}
+  cache: {},
+  nodeKey: function(d) { return d.value.name; },
+  linkKey: function (d) { return d.source.value.name + " requires " + d.target.value.name; }
 };
 feats.addLinks = function (feat) {
   var prerequisitesAsLinks = this.getPrerequisitesAsLinks(feat);
@@ -149,10 +152,10 @@ feats.getPrerequisitesAsLinks = function(feat) {
   // same for caster level?
   // same for class level X
 
-// Or Ability to acquire a special mount
-// Or ability to cast illusion (figment) spells
-// Or spell-like ability with the curse descriptor
-// X speed
+  // Or Ability to acquire a special mount
+  // Or ability to cast illusion (figment) spells
+  // Or spell-like ability with the curse descriptor
+  // X speed
 
 
   if (prerequisitesAsString.endsWith(".")) {
@@ -234,7 +237,7 @@ feats.loadNodes = function(feats) {
       var duplicate = this.cache[feat.name];
       if (duplicate.type !== feat.type
           || duplicate.source !== feat.type) {
-        console.log("Duplicate found: name=" + feat.name 
+        console.log("Duplicate found: name=" + feat.name
                     + " type=" + feat.type
                     + " souce=" + feat.souce);
       }
@@ -270,40 +273,7 @@ feats.buildNodeList = function() {
   });
 }
 
-function renderFeats() {
-  force
-    .nodes(feats.nodes)
-    .links(feats.links)
-
-  link = link.selectAll(".link").data(feats.links);
-  link.enter().append("line");
-  link.exit().remove();
-  link.attr("class", "link")
-    .attr("name", function (d) { return d.source.value.name + " requires " + d.target.value.name; })
-    .attr("marker-end", "url(#end)")
-    .on('click.toSelect', setSelection);
-
-  node = node.selectAll(".node").data(feats.nodes);
-  node.enter().append("circle");
-  node.exit().remove();
-  node.attr("class", "node")
-    .attr("name", function (d) { return d.value.name; })
-    .on('click.toSelect', setSelection)
-    .on('mouseover.tip', tip.show)
-    .on('mouseout.tip', tip.hide);
-
-  label = label.selectAll(".label").data(feats.nodes);
-  label.enter().append("text");
-  label.exit().remove();
-  label.attr("class", "label")
-    .attr("name", function (d) { return d.value.name; })
-    .text(function(d) {
-      return d.value.name;
-    });
-
-}
-
-function onStart() {
+function onForceStart() {
   ui.start.attr("disabled", true);
   ui.stop.attr("disabled", null);
 
@@ -311,10 +281,13 @@ function onStart() {
 }
 
 function start() {
+  force
+    .nodes(feats.nodes)
+    .links(feats.links)
   force.start();
 }
 
-function onStop() {
+function onForceStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
   ui.layoutStatusContainer.classed("invisible", true);
@@ -381,6 +354,15 @@ function reposition() {
 }
 
 function positionNodes() {
+  var node = svg.select("g[name=nodes]").selectAll(".node").data(feats.nodes);
+  node.enter().append("circle");
+  node.exit().remove();
+  node.attr("class", "node")
+    .attr("name", function (d) { return d.value.name; })
+    .on('click.toSelect', setSelection)
+    .on('mouseover.tip', tip.show)
+    .on('mouseout.tip', tip.hide);
+
   node
     .attr("cx", function (d) { return x(d.x); })
     .attr("cy", function (d) { return y(d.y); })
@@ -388,6 +370,14 @@ function positionNodes() {
 }
 
 function positionLinks() {
+  var link = svg.select("g[name=links]").selectAll(".link").data(feats.links);
+  link.enter().append("line");
+  link.exit().remove();
+  link.attr("class", "link")
+    .attr("name", feats.linkKey)
+    .attr("marker-end", "url(#end)")
+    .on('click.toSelect', setSelection);
+
   link
     .style("stroke-width", function (d) {
       return strokeWidth(zoom.scale()) + "px";
@@ -400,6 +390,15 @@ function positionLinks() {
 
 function positionLabels() {
   var shouldHideLabels = zoom.scale() < 1;
+
+  var label = svg.select("g[name=labels]").selectAll(".label").data(feats.nodes);
+  label.enter().append("text");
+  label.exit().remove();
+  label.attr("class", "label")
+    .attr("name", function (d) { return d.value.name; })
+    .text(function(d) {
+      return d.value.name;
+    });
   label
     .classed("hidden", shouldHideLabels)
     .attr("x", function (d) { return x(d.x + r(1) + labelOffset[0]); })
@@ -432,7 +431,6 @@ function csv(url) {
 }
 
 function update() {
-  renderFeats();
   reposition();
 }
 
