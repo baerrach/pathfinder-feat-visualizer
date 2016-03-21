@@ -354,7 +354,7 @@ function reposition() {
 }
 
 function positionNodes() {
-  var node = svg.select("g[name=nodes]").selectAll(".node").data(feats.nodes);
+  var node = svg.select("g[name=nodes]").selectAll(".node").data(feats.nodes, feats.nodeKey);
   node.enter().append("circle");
   node.exit().remove();
   node.attr("class", "node")
@@ -370,7 +370,7 @@ function positionNodes() {
 }
 
 function positionLinks() {
-  var link = svg.select("g[name=links]").selectAll(".link").data(feats.links);
+  var link = svg.select("g[name=links]").selectAll(".link").data(feats.links, feats.linkKey);
   link.enter().append("line");
   link.exit().remove();
   link.attr("class", "link")
@@ -391,7 +391,7 @@ function positionLinks() {
 function positionLabels() {
   var shouldHideLabels = zoom.scale() < 1;
 
-  var label = svg.select("g[name=labels]").selectAll(".label").data(feats.nodes);
+  var label = svg.select("g[name=labels]").selectAll(".label").data(feats.nodes, feats.nodeKey);
   label.enter().append("text");
   label.exit().remove();
   label.attr("class", "label")
