@@ -16,6 +16,13 @@
 
     https://github.com/mbostock/d3/blob/master/LICENSE
 
+## filtrex.js ##
+
+    https://raw.githubusercontent.com/joewalnes/filtrex/master/LICENSE
+    MIT Licenses
+
+    Filtrex includes jison http://zaa.ch/jison/docs/#license (MIT License)
+
 ## graph.css ##
 
     https://github.com/baerrach/pathfinder-feat-visualizer
