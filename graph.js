@@ -36,7 +36,7 @@ if (!Array.prototype.includes) {
     while (k < len) {
       currentElement = O[k];
       if (searchElement === currentElement ||
-         (searchElement !== searchElement && currentElement !== currentElement)) { // NaN !== NaN
+          (searchElement !== searchElement && currentElement !== currentElement)) { // NaN !== NaN
         return true;
       }
       k++;
@@ -388,9 +388,9 @@ function positionNodes() {
   var filteredNodes = feats.allNodes;
 
   var f = compileExpression("withinBounds(x,y)", customFilters);
-  filteredNodes = filteredNodes.filter(function (d) { 
+  filteredNodes = filteredNodes.filter(function (d) {
     var isFiltered = f(d);
-    return isFiltered; 
+    return isFiltered;
   });
 
   feats.nodes = filteredNodes;
