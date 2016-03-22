@@ -174,7 +174,11 @@ feats.getPrerequisitesAsLinks = function(feat) {
   var prerequisitesAsString = feat.prerequisites;
   var andPrerequisites;
 
-  if (!prerequisitesAsString) {
+  if (typeof prerequisitesAsString === "undefined") {
+    return [];
+  }
+  prerequisitesAsString = prerequisitesAsString.trim();
+  if (prerequisitesAsString === "") {
     return [];
   }
 
