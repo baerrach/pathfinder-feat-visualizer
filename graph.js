@@ -14,13 +14,48 @@ if (!String.prototype.endsWith) {
   };
 }
 
+// Polyfill
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes
+if (!Array.prototype.includes) {
+  Array.prototype.includes = function(searchElement /*, fromIndex*/ ) {
+    'use strict';
+    var O = Object(this);
+    var len = parseInt(O.length) || 0;
+    if (len === 0) {
+      return false;
+    }
+    var n = parseInt(arguments[1]) || 0;
+    var k;
+    if (n >= 0) {
+      k = n;
+    } else {
+      k = len + n;
+      if (k < 0) {k = 0;}
+    }
+    var currentElement;
+    while (k < len) {
+      currentElement = O[k];
+      if (searchElement === currentElement ||
+         (searchElement !== searchElement && currentElement !== currentElement)) { // NaN !== NaN
+        return true;
+      }
+      k++;
+    }
+    return false;
+  };
+}
+
+var customFilters = {
+  withinBounds: withinBounds
+};
+
 var panRatio = 0.20;
 var maxRadius = 12;
 var maxStrokeWidth = 1.5;
 var labelOffset = [4, 0];
 var scaleExtent = [0.03125, 32];
 var featsElement = d3.select("#feats");
-var width = featsElement.style("width").replace("px", "");
+var width = Number(featsElement.style("width").replace("px", ""));
 var height = window.innerHeight -4 -4; // 4px padding top and bottom
 var x = d3.scale.linear()
       .domain([0, width])
@@ -107,6 +142,7 @@ var csvs = [
 var promisedCsvs = csvs.map(csv);
 
 var feats = {
+  allNodes: [],
   nodes: [],
   links: [],
   cache: {},
@@ -132,7 +168,6 @@ feats.addNode = function(value) {
   if (isNaN(node.y)) {
     console.log(value.id + ":" + value.name + " y = NaN");
   }
-
 }
 feats.getPrerequisitesAsLinks = function(feat) {
   var prerequisitesAsLinks = [];
@@ -246,24 +281,20 @@ feats.loadNodes = function(feats) {
     this.addNode(feat);
   }, this);
 }
-
-feats.loadLinks = function(feats) {
-  // Do the links last to avoid creating duplicates nodes
-  // when the prequisites creates placeholders instead of real nodes.
-  // This way the only place holders are for non-feat prerequisites.
-  feats.forEach(function (feat) {
-    this.addLinks(feat);
+feats.buildLinks = function() {
+  this.links = [];
+  this.allNodes.forEach(function (node) {
+    this.addLinks(node.value);
   }, this);
 }
-
 feats.buildNodeList = function() {
   Object.keys(this.cache).forEach(function (name) {
     var node = this.cache[name];
-    this.nodes.push(node);
+    this.allNodes.push(node);
   }, this);
 
-  var n = Math.floor(Math.sqrt(this.nodes.length));
-  this.nodes.forEach(function(d, i) {
+  var n = Math.floor(Math.sqrt(this.allNodes.length));
+  this.allNodes.forEach(function(d, i) {
     if (!d.x) {
       d.x = 20 + (r(1)*2+8)*(i % n);
     }
@@ -290,7 +321,7 @@ function start() {
 function onForceStop() {
   ui.start.attr("disabled", null);
   ui.stop.attr("disabled", true);
-  ui.layoutStatusContainer.classed("invisible", true);
+  updateLayoutStatus(0);
 
   endTime = performance.now();
   var diff = moment.duration(endTime - startTime);
@@ -313,10 +344,10 @@ function setupUi() {
   ui.stop.on('click', stop);
 
   ui.layoutStatusContainer = layout.select("#layout-status-container");
-  ui.layoutStatusContainer.classed("invisible", true);
 
   ui.layoutStatus = layout.select("#layout-status");
-  ui.layoutStatus.text("");
+
+  updateLayoutStatus(0);
 
   d3.select("#enable-redraw").on("change", function() {
     enableRedraw = this.checked;
@@ -343,9 +374,9 @@ function setSelection(d) {
 
 function reposition() {
   var s = performance.now();
-  positionLinks();
   positionNodes();
   positionLabels();
+  positionLinks();
 
   var e = performance.now();
   var diff = moment.duration(e - s);
@@ -354,6 +385,16 @@ function reposition() {
 }
 
 function positionNodes() {
+  var filteredNodes = feats.allNodes;
+
+  var f = compileExpression("withinBounds(x,y)", customFilters);
+  filteredNodes = filteredNodes.filter(function (d) { 
+    var isFiltered = f(d);
+    return isFiltered; 
+  });
+
+  feats.nodes = filteredNodes;
+
   var node = svg.select("g[name=nodes]").selectAll(".node").data(feats.nodes, feats.nodeKey);
   node.enter().append("circle");
   node.exit().remove();
@@ -370,7 +411,13 @@ function positionNodes() {
 }
 
 function positionLinks() {
-  var link = svg.select("g[name=links]").selectAll(".link").data(feats.links, feats.linkKey);
+  var links = feats.links;
+
+  links = links.filter(function (l) {
+    return feats.nodes.includes(l.source) || feats.nodes.includes(l.target);
+  });
+
+  var link = svg.select("g[name=links]").selectAll(".link").data(links, feats.linkKey);
   link.enter().append("line");
   link.exit().remove();
   link.attr("class", "link")
@@ -401,16 +448,14 @@ function positionLabels() {
     });
   label
     .classed("hidden", shouldHideLabels)
-    .attr("x", function (d) { return x(d.x + r(1) + labelOffset[0]); })
-    .attr("y", function (d) { return y(d.y + labelOffset[1]); });
+    .attr("x", function (d) { return x(d.x) + r(1) + labelOffset[0]; })
+    .attr("y", function (d) { return y(d.y) + labelOffset[1]; });
 }
 
 function onTick(event) {
-  var percentComplete = (104 - Math.floor(event.alpha*1000)) + "%";
+  var percentComplete = (104 - Math.floor(event.alpha*1000));
 
-  ui.layoutStatus.text(percentComplete);
-  ui.layoutStatus.style("width", percentComplete);
-  ui.layoutStatusContainer.classed("invisible", false);
+  updateLayoutStatus(percentComplete);
 
   if (enableRedraw) {
     reposition();
@@ -435,6 +480,7 @@ function update() {
 }
 
 function pan(_) {
+  // _ contains x-ratio and y-ratio to translate width and height by.
   var translate = zoom.translate();
   translate[0] += width*_[0];
   translate[1] += height*_[1];
@@ -459,7 +505,7 @@ function panCenterLeft() {
 }
 
 function panHome() {
-  zoom.translate([0, 0]);
+  zoom.translate([width/2, height/2]);
   zoom.event(svg);
 }
 
@@ -488,10 +534,8 @@ Promise.all(promisedCsvs)
     feats.loadNodes(results[0]);
     feats.loadNodes(results[1]);
 
-    feats.loadLinks(results[0]);
-    feats.loadLinks(results[1]);
-
     feats.buildNodeList();
+    feats.buildLinks();
     update();
   });
 
@@ -519,4 +563,24 @@ function printXYAllNodes() {
     var id = node.value.id || 0;
     console.log( id + "," + node.value.name + ", " + node.x + "," + node.y );
   });
+}
+
+function updateLayoutStatus(percentComplete) {
+  if (percentComplete <= 0) {
+    ui.layoutStatusContainer.classed("invisible", true);
+    ui.layoutStatus.style("width", 0);
+  }
+  else {
+    ui.layoutStatus.attr("aria-valuenow", percentComplete);
+    percentComplete += "%";
+    ui.layoutStatus.style("width", percentComplete);
+    ui.layoutStatusContainer.classed("invisible", false);
+  }
+
+
+}
+
+function withinBounds(x1, y1) {
+  // Need to use the x(), y() for calculating coordinate space, it has already adjusted for translation and zoom
+  return x(x1) > 0 && x(x1) < width && y(y1) > 0 && y(y1) < height;
 }
