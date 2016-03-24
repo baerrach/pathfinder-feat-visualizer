@@ -3,22 +3,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" media="screen" href="css/bootstrap-3.3.6.css">
   <link rel="stylesheet" type="text/css" media="screen" href="graph.css">
 </head>
 <body>
   <div class="container-fluid">
     <div class="row-fluid">
-      <div class="col-md-1">
-        <div id="organise-by">
-          <form>
-            <h3>Organise by:</h3>
-            <label class="block"><input type="radio" name="mode" value="criticality"> Criticality</label>
-          </form>
-        </div>
-      </div>
-
-      <div class="col-md-9">
+      <div class="col-md-10">
         <a href="http://www.pathfindercommunity.net/home/databases/feats">Feats DB 2016-03-01</a> available for download here.
         Example with dragging http://bl.ocks.org/mbostock/3750558
         <div id="feats" class=""></div>
@@ -50,63 +41,95 @@
         </div>
         <div>
           <fieldset>
-            <legend>Filter Options</legend>
-            <ul class="filter">
-              <li class="filter-option">Placeholder Option
-            </ul>
-          </fieldset>
-        </div>
-        <div>
-          <fieldset>
             <legend>Pan and Zoom</legend>
             <div class="row">
               <div class="col-md-6">
                 <div class="row">
                   <div class="col-md-4">
-                    <button><img id="pan-top-left" src="ic_navigation_black_24px.svg" alt="pan top left"></button>
+                    <button><img id="pan-top-left" src="icons/ic_navigation_black_24px.svg" alt="pan top left"></button>
                   </div>
                   <div class="col-md-4">
-                    <button><img id="pan-top-center" src="ic_navigation_black_24px.svg" alt="pan top center"></button>
+                    <button><img id="pan-top-center" src="icons/ic_navigation_black_24px.svg" alt="pan top center"></button>
                   </div>
                   <div class="col-md-4">
-                    <button><img id="pan-top-right" src="ic_navigation_black_24px.svg" alt="pan top right"></button>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-4">
-                    <button><img id="pan-center-left" src="ic_navigation_black_24px.svg" alt="pan center left"></button>
-                  </div>
-                  <div class="col-md-4">
-                    <button><img id="pan-center-center" src="ic_home_black_24px.svg" alt="pan home"></button>
-                  </div>
-                  <div class="col-md-4">
-                    <button><img id="pan-center-right" src="ic_navigation_black_24px.svg" alt="pan centre right"></button>
+                    <button><img id="pan-top-right" src="icons/ic_navigation_black_24px.svg" alt="pan top right"></button>
                   </div>
                 </div>
                 <div class="row">
                   <div class="col-md-4">
-                    <button><img id="pan-bottom-left" src="ic_navigation_black_24px.svg" alt="pan bottom left"></button>
+                    <button><img id="pan-center-left" src="icons/ic_navigation_black_24px.svg" alt="pan center left"></button>
                   </div>
                   <div class="col-md-4">
-                    <button><img id="pan-bottom-center" src="ic_navigation_black_24px.svg" alt="pan bottom center"></button>
+                    <button><img id="pan-center-center" src="icons/ic_home_black_24px.svg" alt="pan home"></button>
                   </div>
                   <div class="col-md-4">
-                    <button><img id="pan-bottom-right" src="ic_navigation_black_24px.svg" alt="pan bottom right"></button>
+                    <button><img id="pan-center-right" src="icons/ic_navigation_black_24px.svg" alt="pan centre right"></button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-left" src="icons/ic_navigation_black_24px.svg" alt="pan bottom left"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-center" src="icons/ic_navigation_black_24px.svg" alt="pan bottom center"></button>
+                  </div>
+                  <div class="col-md-4">
+                    <button><img id="pan-bottom-right" src="icons/ic_navigation_black_24px.svg" alt="pan bottom right"></button>
                   </div>
                 </div>
               </div>
               <div class="col-md-6">zoom</div>
             </div>
           </fieldset>
-          </div>
+        </div>
+        <div>
+          <fieldset>
+            <legend>Filter Options</legend>
+            <div class="query">
+              <button class="query-filter btn btn-default btn-block" type="button">
+                Foo
+                <span class="glyphicon glyphicon-edit pull-right"></span>
+              </button>
+            </div>
+            <div>
+              <button id="add-filter" class="btn btn-default btn-block" type="button">
+                Add filter...
+                <span class="glyphicon glyphicon-plus pull-right"></span>
+              </button>
+            </div>
+            <div>Filter action</div>
+            <div>Help for filtrex</div>
+            <div>Help for fields in database</div>
+            <div>Create new filter + dnd to re-order</div>
+          </fieldset>
         </div>
       </div>
     </div>
-    <script src="d3.js"></script>
-    <script src="d3.tip.js"></script>
-    <script src="palette.js"></script>
-    <script src="graph.js"></script>
-    <script src="filtrex.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
-    <script src="http://localhost:8888/skewer"></script>
+  </div>
+
+  <div class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Modal title</h4>
+        </div>
+        <div class="modal-body">
+          <p>One fine body&hellip;</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+  <script src="js/d3-3.5.16.js"></script>
+  <script src="js/d3-tip-0.6.7.js"></script>
+  <script src="js/palette-1.2.6.js"></script>
+  <script src="js/filtrex.js"></script>
+  <script src="js/moment-2.12.0.min.js"></script>
+  <script src="js/jquery-1.12.2.min.js"></script>
+  <script src="graph.js"></script>
+  <script src="http://localhost:8888/skewer"></script>
 </body>

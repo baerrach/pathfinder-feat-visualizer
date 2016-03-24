@@ -348,10 +348,16 @@ function setupUi() {
   ui.stop.on('click', stop);
 
   ui.layoutStatusContainer = layout.select("#layout-status-container");
-
   ui.layoutStatus = layout.select("#layout-status");
-
   updateLayoutStatus(0);
+
+  ui.queries = d3.selectAll(".query");
+  ui.queries.data(function (d, i) {
+    return [i];
+  });
+  ui.queries.select(".query-filter").on("input", checkFilter);
+  ui.queries.select(".query-filter").on("change", updateQuery);
+  ui.queries.select(".btn").on("click", updateQuery);
 
   d3.select("#enable-redraw").on("change", function() {
     enableRedraw = this.checked;
@@ -580,8 +586,14 @@ function updateLayoutStatus(percentComplete) {
     ui.layoutStatus.style("width", percentComplete);
     ui.layoutStatusContainer.classed("invisible", false);
   }
+}
 
+function checkFilter(d) {
+  console.log("checkFilter d="+d);
+}
 
+function updateQuery(d) {
+  console.log("updateQuery d="+d);
 }
 
 function withinBounds(x1, y1) {
