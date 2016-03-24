@@ -105,3 +105,17 @@ text {
 .highlighted {
   box-shadow: 0px 0px 5px #ffea00; /* A400 */
 }
+
+.draggable {
+  cursor: move; /* fallback: no `url()` support or images disabled */
+  cursor: -webkit-grab; /* Chrome 1-21, Safari 4+ */
+  cursor: -moz-grab; /* Firefox 1.5-26 */
+  cursor: grab; /* W3C standards syntax, should come least */
+}
+
+.draggable:active {
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+  cursor: grabbing;
+}
+

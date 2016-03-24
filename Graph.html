@@ -86,13 +86,20 @@
           <fieldset>
             <legend>Filter Options</legend>
             <div class="query">
-              <button class="query-filter btn btn-default btn-block" type="button">
-                Foo
-                <span class="glyphicon glyphicon-edit pull-right"></span>
-              </button>
+              <div class="input-group">
+                <div class="input-group-btn">
+                  <button class="btn btn-default draggable" type="button">
+                    <span class="glyphicon glyphicon-menu-hamburger"></span>
+                  </button>
+                </div>
+                <button class="query-filter btn btn-default btn-block" type="button">
+                  Foo
+                  <span class="glyphicon glyphicon-edit pull-right"></span>
+                </button>
+              </div>
             </div>
             <div>
-              <button id="add-filter" class="btn btn-default btn-block" type="button">
+              <button id="add-filter" class="btn btn-default btn-block" type="button" data-toggle="modal" data-target="#add-filter-dialog">
                 Add filter...
                 <span class="glyphicon glyphicon-plus pull-right"></span>
               </button>
@@ -107,7 +114,7 @@
     </div>
   </div>
 
-  <div class="modal fade" tabindex="-1" role="dialog">
+  <div id="add-filter-dialog" class="modal fade" tabindex="-1" role="dialog">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -130,6 +137,7 @@
   <script src="js/filtrex.js"></script>
   <script src="js/moment-2.12.0.min.js"></script>
   <script src="js/jquery-1.12.2.min.js"></script>
+  <script src="js/bootstrap-3.3.6.min.js"></script>
   <script src="graph.js"></script>
   <script src="http://localhost:8888/skewer"></script>
 </body>
