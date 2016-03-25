@@ -74,7 +74,15 @@ var strokeWidth = d3.scale.linear()
 var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
-var queries = [];
+var queries = [
+  {
+    name: "General",
+    query: "type == \"General\""
+  }
+];
+queries[0].expression = compileExpression(queries[0].query, customFilters);
+
+var editingQueryFilterIndex;
 
 // build the arrow (http://bl.ocks.org/d3noob/5141278)
 svg.append("svg:defs").selectAll("marker")
@@ -395,15 +403,8 @@ function reposition() {
 }
 
 function positionNodes() {
-  var filteredNodes = feats.allNodes;
-
-  var f = compileExpression("withinBounds(x,y)", customFilters);
-  filteredNodes = filteredNodes.filter(function (d) {
-    var isFiltered = f(d);
-    return isFiltered;
-  });
-
-  feats.nodes = filteredNodes;
+  var f = { expression: compileExpression("withinBounds(x,y)", customFilters) };
+  feats.nodes = runFilters([f].concat(queries));
 
   var node = svg.select("g[name=nodes]").selectAll(".node").data(feats.nodes, feats.nodeKey);
   node.enter().append("circle");
@@ -415,8 +416,14 @@ function positionNodes() {
     .on('mouseout.tip', tip.hide);
 
   node
-    .attr("cx", function (d) { return x(d.x); })
-    .attr("cy", function (d) { return y(d.y); })
+    .attr("cx", function (d) {
+      d.value.x = d.x;
+      return x(d.x);
+    })
+    .attr("cy", function (d) {
+      d.value.y = d.y;
+      return y(d.y);
+    })
     .attr("r", r(zoom.scale()));
 }
 
@@ -588,30 +595,46 @@ function updateLayoutStatus(percentComplete) {
   }
 }
 
-function setupAddFilterDialog(event) {
-  var button = $(event.relatedTarget); // Button that triggered the modal
-  console.log("button.id=" + button.attr('id') + " button.data-filter-id=" + button.data("filter-id"));
+function runFilters(filters) {
+  var filteredNodes = feats.allNodes;
+
+  filters.forEach(function(f) {
+    filteredNodes = filteredNodes.filter(function (d) {
+      var isFiltered = f.expression(d.value);
+      return isFiltered;
+    });
+  });
+
+  return filteredNodes;
 }
 
-function checkFilter(d) {
-  console.log("checkFilter this.text="+this.value);
+function setupAddFilterDialog(event) {
+  var button = $(event.relatedTarget); // Button that triggered the modal
+  if ("add-filter-dialog" === button.attr('id')) {
+    editingQueryFilterIndex = d3.selectAll(".query-filter").length;
+  }
+  else {
+    editingQueryFilterIndex = button.data("filter-id");
+    var filterDialog = d3.select("#add-filter-dialog");
+    filterDialog.select(".filter-name")[0][0].value = queries[editingQueryFilterIndex].name;
+    filterDialog.select(".filter-query").text(queries[editingQueryFilterIndex].query);
+  }
+}
 
+function checkFilter() {
+  var errorMessage = $("#Filter-dialog-error");
   try {
     var f = compileExpression(this.value, customFilters);
     var filteredNodes = feats.nodes.filter(function (d) {
       var isFiltered = f(d.value);
       return isFiltered;
     });
+    $("#filter-dialog-error").parent().addClass("hidden");
     console.log("filteredNodes=" + filteredNodes);
   }
   catch (e) {
-    var messages = ["Error:"];
-    if (e.lineNumber) {
-      messages.push("on line " + e.lineNumber);
-    }
-    messages.push(e.message);
-
-    console.log(messages.join(" "));
+    $("#filter-dialog-error").html(e.message)
+      .parent().removeClass("hidden");
   }
 
 }
