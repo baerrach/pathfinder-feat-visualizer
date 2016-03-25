@@ -74,6 +74,7 @@ var strokeWidth = d3.scale.linear()
 var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
+var queries = [];
 
 // build the arrow (http://bl.ocks.org/d3noob/5141278)
 svg.append("svg:defs").selectAll("marker")
@@ -351,13 +352,11 @@ function setupUi() {
   ui.layoutStatus = layout.select("#layout-status");
   updateLayoutStatus(0);
 
-  ui.queries = d3.selectAll(".query");
-  ui.queries.data(function (d, i) {
-    return [i];
-  });
-  ui.queries.select(".query-filter").on("input", checkFilter);
-  ui.queries.select(".query-filter").on("change", updateQuery);
-  ui.queries.select(".btn").on("click", updateQuery);
+  d3.select("#add-filter-dialog .filter-query").on("input", checkFilter);
+  d3.select("#add-filter-dialog .filter-query").on("change", updateQuery);
+  d3.selectAll("#add-filter-dialog .filter-actions").on("click", setFilterAction);
+  d3.select("#add-filter-dialog .btn-primary").on("click", updateQuery);
+  $('#add-filter-dialog').on('show.bs.modal', setupAddFilterDialog);
 
   d3.select("#enable-redraw").on("change", function() {
     enableRedraw = this.checked;
@@ -372,6 +371,7 @@ function setupUi() {
   d3.select("#pan-bottom-left").on("click", panBottomLeft);
   d3.select("#pan-bottom-center").on("click", panBottomCenter);
   d3.select("#pan-bottom-right").on("click", panBottomRight);
+
 }
 
 function setSelection(d) {
@@ -588,12 +588,41 @@ function updateLayoutStatus(percentComplete) {
   }
 }
 
+function setupAddFilterDialog(event) {
+  var button = $(event.relatedTarget); // Button that triggered the modal
+  console.log("button.id=" + button.attr('id') + " button.data-filter-id=" + button.data("filter-id"));
+}
+
 function checkFilter(d) {
-  console.log("checkFilter d="+d);
+  console.log("checkFilter this.text="+this.value);
+
+  try {
+    var f = compileExpression(this.value, customFilters);
+    var filteredNodes = feats.nodes.filter(function (d) {
+      var isFiltered = f(d.value);
+      return isFiltered;
+    });
+    console.log("filteredNodes=" + filteredNodes);
+  }
+  catch (e) {
+    var messages = ["Error:"];
+    if (e.lineNumber) {
+      messages.push("on line " + e.lineNumber);
+    }
+    messages.push(e.message);
+
+    console.log(messages.join(" "));
+  }
+
 }
 
 function updateQuery(d) {
   console.log("updateQuery d="+d);
+}
+
+function setFilterAction() {
+  var filterAction = d3.select("#add-filter-dialog .filter-action");
+  filterAction.text(this.text);
 }
 
 function withinBounds(x1, y1) {

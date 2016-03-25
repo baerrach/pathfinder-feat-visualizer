@@ -92,7 +92,7 @@
                     <span class="glyphicon glyphicon-menu-hamburger"></span>
                   </button>
                 </div>
-                <button class="query-filter btn btn-default btn-block" type="button">
+                <button class="query-filter btn btn-default btn-block" type="button" data-toggle="modal" data-target="#add-filter-dialog" data-filter-id="0">
                   Foo
                   <span class="glyphicon glyphicon-edit pull-right"></span>
                 </button>
@@ -104,10 +104,6 @@
                 <span class="glyphicon glyphicon-plus pull-right"></span>
               </button>
             </div>
-            <div>Filter action</div>
-            <div>Help for filtrex</div>
-            <div>Help for fields in database</div>
-            <div>Create new filter + dnd to re-order</div>
           </fieldset>
         </div>
       </div>
@@ -119,10 +115,26 @@
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Modal title</h4>
+          <input type="text" class="filter-name form-control modal-title" placeholder="Filter Name">
         </div>
         <div class="modal-body">
-          <p>One fine body&hellip;</p>
+          <textarea type="text" class="filter-query form-control" rows="3" placeholder="Filter Query"></textarea>
+          <div class="dropdown">
+            <button id="filter-action-menu" class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              Action
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="filter-action-menu">
+              <li><a class="filter-actions" href="#">Exclude</a></li>
+              <li><a class="filter-actions" href="#">Include Only</a></li>
+              <li><a class="filter-actions" href="#">Highlight</a></li>
+            </ul>
+            <span class="filter-action">Exclude</span>
+          </div>
+          <div>Results of filter as table with header</div>
+          <div>Help for filtrex</div>
+          <div>Help for fields in database</div>
+          <div>Create new filter + dnd to re-order</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
