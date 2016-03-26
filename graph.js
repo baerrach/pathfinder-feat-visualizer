@@ -74,6 +74,7 @@ var strokeWidth = d3.scale.linear()
 var svg = featsElement.append("svg")
       .attr("width", width)
       .attr("height", height);
+var headers;
 var queries = [
   {
     name: "General",
@@ -579,6 +580,7 @@ function onZoom() {
 
 Promise.all(promisedCsvs)
   .then(function (results) {
+    headers = results[0][0];
     feats.loadNodes(results[0]);
     feats.loadNodes(results[1]);
 
@@ -650,16 +652,45 @@ function setupAddFilterDialog(event) {
     filterDialog.select(".filter-name")[0][0].value = queries[editingQueryFilterIndex].name;
     filterDialog.select(".filter-query").text(queries[editingQueryFilterIndex].query);
   }
+
+  var results = d3.select(".filter-results table");
+  var headerColumns = d3.keys(feats.allNodes[0].value);
+  var headers = results.select("thead tr").selectAll("th").data(headerColumns);
+  headers.enter()
+    .append("th");
+  headers.exit().remove();
+  headers
+    .text(function(d) { return d; });
+
 }
 
 function checkFilter() {
   var errorMessage = $("#Filter-dialog-error");
   try {
     var f = compileExpression(this.value, customFilters);
-    var filteredNodes = feats.nodes.filter(function (d) {
-      var isFiltered = f(d.value);
-      return isFiltered;
+    var currentFilters = queries.slice(0, Math.min(queries.length, editingQueryFilterIndex));
+    currentFilters.push({expression:f});
+
+    var filteredNodes = runFilters(currentFilters);
+
+    var results = d3.select(".filter-results table tbody");
+    var rows = results.selectAll("tr").data(filteredNodes);
+    rows.enter()
+      .append("tr");
+    rows.exit().remove();
+
+    var cells = rows.selectAll("td")
+          .data(function(node) {
+            return d3.values(node.value);
+          });
+    cells.enter()
+      .append("td");
+    cells.exit().remove();
+
+    cells.text(function(value) {
+      return value;
     });
+
     $("#filter-dialog-error").parent().addClass("hidden");
     console.log("filteredNodes=" + filteredNodes);
   }
