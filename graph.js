@@ -347,6 +347,35 @@ function stop() {
   force.stop();
 }
 
+function updateQueryUi() {
+  var query = d3.select(".queries").selectAll(".query").data(queries);
+
+  var inputGroup = query.enter()
+        .insert("div", "#add-filter").attr("class", "query")
+        .append("div").attr("class", "input-group")
+  inputGroup.append("div").attr("class", "input-group-btn")
+    .append("button")
+    .attr("class", "btn btn-default draggable")
+    .attr("type", "button")
+    .append("span")
+    .attr("class", "glyphicon glyphicon-menu-hamburger");
+
+  inputGroup.append("button")
+    .attr("class", "query-filter btn btn-default btn-block")
+    .attr("type" , "button")
+    .attr("data-toggle", "modal")
+    .attr("data-target", "#add-filter-dialog")
+    .attr("data-filter-id", "0")
+    .append("span")
+    .attr("class", "glyphicon glyphicon-edit pull-right");
+
+  query.exit().remove();
+
+  query.select(".query-filter").text(function (d) {
+    return d.name;
+  });
+}
+
 function setupUi() {
   var layout = d3.selectAll(".layout");
 
@@ -359,6 +388,8 @@ function setupUi() {
   ui.layoutStatusContainer = layout.select("#layout-status-container");
   ui.layoutStatus = layout.select("#layout-status");
   updateLayoutStatus(0);
+
+  updateQueryUi();
 
   d3.select("#add-filter-dialog .filter-query").on("input", checkFilter);
   d3.select("#add-filter-dialog .filter-query").on("change", updateQuery);
@@ -610,7 +641,7 @@ function runFilters(filters) {
 
 function setupAddFilterDialog(event) {
   var button = $(event.relatedTarget); // Button that triggered the modal
-  if ("add-filter-dialog" === button.attr('id')) {
+  if ("add-filter" === button.attr('id')) {
     editingQueryFilterIndex = d3.selectAll(".query-filter").length;
   }
   else {
