@@ -84,6 +84,7 @@ var queries = [
 queries[0].expression = compileExpression(queries[0].query, customFilters);
 
 var editingQueryFilterIndex;
+var filterResults;
 
 // build the arrow (http://bl.ocks.org/d3noob/5141278)
 svg.append("svg:defs").selectAll("marker")
@@ -643,56 +644,62 @@ function runFilters(filters) {
 
 function setupAddFilterDialog(event) {
   var button = $(event.relatedTarget); // Button that triggered the modal
+  var filterDialog = d3.select("#add-filter-dialog");
   if ("add-filter" === button.attr('id')) {
     editingQueryFilterIndex = d3.selectAll(".query-filter").length;
+    filterDialog.select(".filter-name")[0][0].value = "";
+    filterDialog.select(".filter-query")[0][0].value = "";
   }
   else {
     editingQueryFilterIndex = button.data("filter-id");
-    var filterDialog = d3.select("#add-filter-dialog");
     filterDialog.select(".filter-name")[0][0].value = queries[editingQueryFilterIndex].name;
-    filterDialog.select(".filter-query").text(queries[editingQueryFilterIndex].query);
+    filterDialog.select(".filter-query")[0][0].value = queries[editingQueryFilterIndex].query;
   }
 
   var results = d3.select(".filter-results table");
-  var headerColumns = d3.keys(feats.allNodes[0].value);
-  var headers = results.select("thead tr").selectAll("th").data(headerColumns);
-  headers.enter()
-    .append("th");
-  headers.exit().remove();
-  headers
-    .text(function(d) { return d; });
+  var headerColumns = d3.keys(feats.allNodes[0].value).map(function (value) {
+    return {
+      title: value,
+      data: value,
+      defaultContent: "<i>Not set</i>"
+    };
+  });
+  if (!filterResults) {
+    filterResults = $(".filter-results table").dataTable(
+      {
+        scrollY: "200px",
+        scrollX: true,
+        autoWidth: false,
+        columns: headerColumns
+      }
+    ).api();
+  }
 
+  checkFilter();
 }
 
 function checkFilter() {
   var errorMessage = $("#Filter-dialog-error");
   try {
-    var f = compileExpression(this.value, customFilters);
     var currentFilters = queries.slice(0, Math.min(queries.length, editingQueryFilterIndex));
-    currentFilters.push({expression:f});
+    var filterDialog = d3.select("#add-filter-dialog");
+    var filterQuery = filterDialog.select(".filter-query")[0][0].value;
+    if (filterQuery) {
+      var f = compileExpression(filterQuery, customFilters);
+      currentFilters.push({expression:f});
+    }
 
     var filteredNodes = runFilters(currentFilters);
-
-    var results = d3.select(".filter-results table tbody");
-    var rows = results.selectAll("tr").data(filteredNodes);
-    rows.enter()
-      .append("tr");
-    rows.exit().remove();
-
-    var cells = rows.selectAll("td")
-          .data(function(node) {
-            return d3.values(node.value);
-          });
-    cells.enter()
-      .append("td");
-    cells.exit().remove();
-
-    cells.text(function(value) {
-      return value;
+    filteredNodes = filteredNodes.map(function (node) {
+      return node.value;
     });
 
+    // Use DataTables data api to build table for me.
+    filterResults.clear();
+    filterResults.rows.add(filteredNodes);
+    filterResults.draw();
+
     $("#filter-dialog-error").parent().addClass("hidden");
-    console.log("filteredNodes=" + filteredNodes);
   }
   catch (e) {
     $("#filter-dialog-error").html(e.message)
